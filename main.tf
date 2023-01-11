@@ -13,6 +13,7 @@ variable "private_key_loc" {}
 
 resource "aws_vpc" "myapp-vpc" {
   cidr_block = var.vpc_cidr_block
+  enable_dns_hostnames = true
   tags ={
     Name: "${var.env_prefix}-vpc"
   }
@@ -144,21 +145,69 @@ output "aws_ami_id" {
   value = data.aws_ami.latest-amazon-linux-image
 }
 resource "aws_instance" "myapp-server" {
-  ami = data.aws_ami.latest-amazon-linux-image.id
-  instance_type = var.instance_type
+  ami                           = data.aws_ami.latest-amazon-linux-image.id
+  instance_type                 = var.instance_type
 
-  subnet_id = aws_subnet.myapp-subnet-1.id
-  vpc_security_group_ids = [ aws_default_security_group.default-myapp-sg.id ]
-  availability_zone = var.avail_zone
+  subnet_id                     = aws_subnet.myapp-subnet-1.id
+  vpc_security_group_ids        = [ aws_default_security_group.default-myapp-sg.id ]
+  availability_zone             = var.avail_zone
 
-  associate_public_ip_address = true
+  associate_public_ip_address   = true
   
-  key_name = aws_key_pair.ssh-key.key_name
+  key_name                      = aws_key_pair.ssh-key.key_name
 
-  user_data = file("entry-script.sh")
+  # user_data                     = file("entry-script.sh")
 
   tags={
     Name:"${var.env_prefix}-server"
+  }
+
+  # provisioner "local-exec"{
+  #   working_dir = "../ansible"
+  #   command= "ansible-playbook --inventory ${self.public_ip}, --private-key ${var.private_key_loc} --user ec2-user new-dockerdeploy.yaml"
+  # }
+   
+}
+resource "aws_instance" "myapp-server-2" {
+  ami                           = data.aws_ami.latest-amazon-linux-image.id
+  instance_type                 = var.instance_type
+
+  subnet_id                     = aws_subnet.myapp-subnet-1.id
+  vpc_security_group_ids        = [ aws_default_security_group.default-myapp-sg.id ]
+  availability_zone             = var.avail_zone
+
+  associate_public_ip_address   = true
+  
+  key_name                      = aws_key_pair.ssh-key.key_name
+
+  # user_data                     = file("entry-script.sh")
+
+  tags={
+    Name:"${var.env_prefix}-server-2"
+  }
+
+  # provisioner "local-exec"{
+  #   working_dir = "../ansible"
+  #   command= "ansible-playbook --inventory ${self.public_ip}, --private-key ${var.private_key_loc} --user ec2-user new-dockerdeploy.yaml"
+  # }
+   
+}
+resource "aws_instance" "myapp-server-3" {
+  ami                           = data.aws_ami.latest-amazon-linux-image.id
+  instance_type                 = var.instance_type
+
+  subnet_id                     = aws_subnet.myapp-subnet-1.id
+  vpc_security_group_ids        = [ aws_default_security_group.default-myapp-sg.id ]
+  availability_zone             = var.avail_zone
+
+  associate_public_ip_address   = true
+  
+  key_name                      = aws_key_pair.ssh-key.key_name
+
+  # user_data                     = file("entry-script.sh")
+
+  tags={
+    Name:"${var.env_prefix}-server-3"
   }
 
   # provisioner "local-exec"{
