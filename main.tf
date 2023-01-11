@@ -8,9 +8,9 @@ variable "avail_zone" {}
 variable "env_prefix" {}
 variable "my_ip" {}
 variable "instance_type" {}
-variable "public_key_loc" {
-  
-}
+variable "public_key_loc" {}
+variable "private_key_loc" {}
+
 resource "aws_vpc" "myapp-vpc" {
   cidr_block = var.vpc_cidr_block
   tags ={
@@ -156,8 +156,20 @@ resource "aws_instance" "myapp-server" {
   key_name = aws_key_pair.ssh-key.key_name
 
   user_data = file("entry-script.sh")
+
   tags={
     Name:"${var.env_prefix}-server"
   }
+
+  # provisioner "local-exec"{
+  #   working_dir = "../ansible"
+  #   command= "ansible-playbook --inventory ${self.public_ip}, --private-key ${var.private_key_loc} --user ec2-user new-dockerdeploy.yaml"
+  # }
    
+}
+resource "null_resource" "configre_server" {
+  provisioner "local-exec"{
+    working_dir = "../ansible"
+    command= "ansible-playbook --inventory ${aws_instance.myapp-server.public_ip}, --private-key ${var.private_key_loc} --user ec2-user new-dockerdeploy.yaml"
+  }
 }
