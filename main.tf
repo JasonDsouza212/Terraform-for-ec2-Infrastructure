@@ -221,4 +221,4 @@ resource "null_resource" "configre_server" {
     working_dir = "../ansible"
     command= "ansible-playbook --inventory ${aws_instance.myapp-server.public_ip}, --private-key ${var.private_key_loc} --user ec2-user new-dockerdeploy.yaml"
   }
-}
+} 
