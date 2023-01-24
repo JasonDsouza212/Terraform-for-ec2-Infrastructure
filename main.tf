@@ -13,6 +13,7 @@ variable "private_key_loc" {}
 
 resource "aws_vpc" "myapp-vpc" {
   cidr_block = var.vpc_cidr_block
+  enable_dns_hostnames = true
   tags ={
     Name: "${var.env_prefix}-vpc"
   }
@@ -33,23 +34,6 @@ resource "aws_internet_gateway" "myapp-igw" {
     Name:"${var.env_prefix}-igw"
   }
 }
-# resource "aws_route_table" "myapp-route-table" {
-#   vpc_id = aws_vpc.myapp-vpc.id
-
-#   route{
-#         cidr_block="0.0.0.0/0"
-#         gateway_id = aws_internet_gateway.myapp-igw.id 
-#   }
-#   tags={
-#     Name:"${var.env_prefix}-rtb"
-#   }
-# }
-
-# resource "aws_route_table_association" "a-rtb-subnet" {
-#   subnet_id = aws_subnet.myapp-subnet-1.id
-#   route_table_id = aws_route_table.myapp-route-table.id
-#  }
-
 resource "aws_default_route_table" "main-rtb" {
   default_route_table_id=aws_vpc.myapp-vpc.default_route_table_id    
     route{
@@ -60,38 +44,7 @@ resource "aws_default_route_table" "main-rtb" {
     Name:"${var.env_prefix}-main-rtb"
   }
 }
-
-# resource "aws_security_group" "myapp-sg" {
-#   name ="myapp-sg"
-#   vpc_id= aws_vpc.myapp-vpc.id
-
-#   ingress{
-#     from_port = 22
-#     to_port = 22
-#     protocol = "tcp"
-#     cidr_blocks = [var.my_ip]
-#   }
-
-#    ingress{
-#     from_port = 8080
-#     to_port = 8080
-#     protocol = "tcp"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-
-#   egress {
-#     from_port = 0
-#     to_port = 0
-#     protocol = "-1"
-#     cidr_blocks = ["0.0.0.0/0"]
-#      prefix_list_ids = []
-#   }
-#     tags={
-#     Name:"${var.env_prefix}-sg"
-#   }
-# }
 resource "aws_default_security_group" "default-myapp-sg" {
-  # name ="myapp-sg"
   vpc_id= aws_vpc.myapp-vpc.id
 
   ingress{
@@ -144,32 +97,24 @@ output "aws_ami_id" {
   value = data.aws_ami.latest-amazon-linux-image
 }
 resource "aws_instance" "myapp-server" {
-  ami = data.aws_ami.latest-amazon-linux-image.id
-  instance_type = var.instance_type
+  ami                           = data.aws_ami.latest-amazon-linux-image.id
+  instance_type                 = var.instance_type
 
-  subnet_id = aws_subnet.myapp-subnet-1.id
-  vpc_security_group_ids = [ aws_default_security_group.default-myapp-sg.id ]
-  availability_zone = var.avail_zone
+  subnet_id                     = aws_subnet.myapp-subnet-1.id
+  vpc_security_group_ids        = [ aws_default_security_group.default-myapp-sg.id ]
+  availability_zone             = var.avail_zone
 
-  associate_public_ip_address = true
+  associate_public_ip_address   = true
   
-  key_name = aws_key_pair.ssh-key.key_name
-
-  user_data = file("entry-script.sh")
+  key_name                      = aws_key_pair.ssh-key.key_name
 
   tags={
     Name:"${var.env_prefix}-server"
   }
-
-  # provisioner "local-exec"{
-  #   working_dir = "../ansible"
-  #   command= "ansible-playbook --inventory ${self.public_ip}, --private-key ${var.private_key_loc} --user ec2-user new-dockerdeploy.yaml"
-  # }
-   
 }
 resource "null_resource" "configre_server" {
   provisioner "local-exec"{
     working_dir = "../ansible"
-    command= "ansible-playbook --inventory ${aws_instance.myapp-server.public_ip}, --private-key ${var.private_key_loc} --user ec2-user new-dockerdeploy.yaml"
+    command= "ansible-playbook --inventory ${aws_instance.myapp-server.public_ip}, --private-key ${var.private_key_loc} --user ec2-user new_file.yaml"
   }
 }
